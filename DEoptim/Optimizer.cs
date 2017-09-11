@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DEoptim
 {
@@ -39,7 +40,6 @@ namespace DEoptim
                 RandomizeAgent(agent, lowerLimit, upperLimit, rng);
                 population.Add(agent);
             }
-            
         }
 
         private void RandomizeAgent(double[] agent, double lowerLimit, double upperLimit, Random rng = null)
@@ -87,6 +87,22 @@ namespace DEoptim
                 return RandomizeDouble(lowerLimit, upperLimit, rng);
             else
                 return v;
+        }
+
+        public void WipePopulation(float retainFactor)
+        {
+            Random rng = new Random();
+            int numWipes = population.Count - (int)(population.Count * retainFactor);
+            while (numWipes > 0)
+            {
+                int n = rng.Next(population.Count);
+                if (cost[n] < double.MaxValue - 1)
+                {
+                    RandomizeAgent(population[n], lowerLimit, upperLimit, rng);
+                    cost[n] = double.MaxValue;
+                    numWipes--;
+                }
+            }
         }
 
         public double[] Run(Sample[] sampleSet, int iterations = 200, float CR = 0.9f)

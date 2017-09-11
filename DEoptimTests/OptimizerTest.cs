@@ -16,20 +16,31 @@ namespace DEoptimTests
         [TestMethod]
         public void TestSinoidOptimization()
         {
-            Optimizer optim = new Optimizer(MySinoidFunc, new double[] { 0, 0, 0, 0 }, 100, -5, 5);
+            Optimizer optim = new Optimizer(MySinoidFunc, new double[] { 0, 0, 0, 0 }, 10, -5, 5);
 
-            double[] x = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-            double[] y = { 0, 1, 2, 2.6, 2, 1, 0, 1, 2, 2.4, 2, 1 };
-
-            Sample[] sampleSet = new Sample[x.Length];
-            for (int i = 0; i < x.Length; i++)
+            for (int m = 1; m < 100; m += 5)
             {
-                sampleSet[i] = new Sample(x[i], y[i]);
-            }
+                double[] x = new double[20];
+                double[] y = new double[x.Length];
+                for (int n = 0; n < x.Length; n++)
+                {
+                    x[n] = m + n;
+                    y[n] = -1.180 * Math.Sin(1.03 * x[n] + 0.67) + 1.40;
+                }
 
-            double[] best = optim.Run(sampleSet);
-            double cost = optim.Cost(best, sampleSet);
-            Console.WriteLine(best);
+                optim.WipePopulation(0.5f);
+
+                Sample[] sampleSet = new Sample[x.Length];
+                for (int i = 0; i < x.Length; i++)
+                {
+                    sampleSet[i] = new Sample(x[i], y[i]);
+                }
+
+                double[] best = optim.Run(sampleSet);
+                double cost = optim.Cost(best, sampleSet);
+
+                Assert.IsTrue(cost < 0.0001);
+            }
         }
     }
 }
