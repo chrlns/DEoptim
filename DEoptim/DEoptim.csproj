@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <Authors>Christian Lins</Authors>
-    <Version>0.1.0</Version>
-    <Description>C# implementation of DEoptim algorithm</Description>
+    <Version>0.2.0</Version>
+    <Description>C# implementation of Differential Evolution algorithm</Description>
     <RepositoryUrl>https://github.com/cli/DEoptim</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
