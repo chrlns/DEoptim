@@ -13,6 +13,6 @@ namespace DEoptim
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <param name="samples"></param>
-        void DoWork(int start, int end, Sample[] samples);
+        void DoWork();
     }
 }

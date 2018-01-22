@@ -9,9 +9,9 @@ namespace DEoptim
     /// </summary>
     class VariantDErand1bin : DEVariant
     {
-        public override double MutateVectorElement(DEHyperParameter hp, double a, double b, double c)
+        public override double MutateVectorElement(DEHyperParameter hp, double a, double b, double c, double min, double max, Random rng)
         {
-            return c + hp.F * (a - b);
+            return EnsureBounds(c + hp.F * (a - b), min, max, rng);
         }
     }
 }

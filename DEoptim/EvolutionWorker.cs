@@ -14,12 +14,7 @@ namespace DEoptim
         public EvolutionWorker(int numThreads)
         {
             this.queue = new ConcurrentQueue<IEvolutionWork>();
-
-            for (int num = 0; num < numThreads; num++)
-            {
-                worker[num] = new Thread(Run);
-                worker[num].Start();
-            }
+            this.worker = new Thread[numThreads];
         }
 
         /// <summary>
@@ -31,9 +26,30 @@ namespace DEoptim
 
         }
 
+        public void Join()
+        {
+            for (int num = 0; num < worker.Length; num++)
+            {
+                worker[num].Join();
+            }
+        }
+
         public void Run()
         {
+            IEvolutionWork work;
+            while(queue.TryDequeue(out work))
+            {
+                work.DoWork();
+            }
+        }
 
+        public void Start()
+        {
+            for (int num = 0; num < worker.Length; num++)
+            {
+                worker[num] = new Thread(Run);
+                worker[num].Start();
+            }
         }
 
         public int[] SliceStrategy(int populationSize)
@@ -44,11 +60,11 @@ namespace DEoptim
             int oneSliceSize = populationSize / worker.Length;  // Example: oneSliceSize = 1000 / 8 = 125
 
             slices[0] = 0;
-            slices[1] = oneSliceSize - 1; // Example: 124
-            for (int i = 1; i < slices.Length; i += 2)
+            slices[1] = oneSliceSize; // Example: 125
+            for (int i = 2; i < slices.Length; i += 2)
             {
-                slices[i] = slices[i - 1] + 1; // Example: 125
-                slices[i + 1] = slices[i] + oneSliceSize - 1; // Example: 125 + 125 - 1 = 249
+                slices[i] = slices[i - 1]; // Example: 125
+                slices[i + 1] = slices[i] + oneSliceSize; // Example: 125 + 125 = 500
             }
 
             return slices;

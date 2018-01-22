@@ -15,15 +15,12 @@ namespace DEoptimExample
 
         static void Main(string[] args)
         {
-            bool showOutput = false;
-
             Stopwatch sw = Stopwatch.StartNew();
 
             for (int n = 0; n < 100; n++)
             {
-                OptimizerParameter optimParam = new OptimizerParameter();
-                optimParam.Individuals = 100;
-                Optimizer optim = new Optimizer(MySinoidFunc, 4, new double[] { -5, -5, -5, -5 }, new double[] { 5, 5, 5, 5 }, optimParam);
+                DEHyperParameter hp = new DEHyperParameter();
+                hp.Individuals = 100;
 
                 double[] x = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
                 double[] y = { 0, 1, 2, 2.6, 2, 1, 0, 1, 2, 2.4, 2, 1 };
@@ -33,19 +30,12 @@ namespace DEoptimExample
                 {
                     sampleSet[i] = new Sample(x[i], y[i]);
                 }
+                FuncMinimizeWrapper wrapper = new FuncMinimizeWrapper(MySinoidFunc, sampleSet);
+                Func<double[], double> minFunc = wrapper.Func;
 
-                double[] best = optim.Run(sampleSet, 1000, 0.25f);
-                double cost = optim.Cost(best, sampleSet);
-                int iter = optim.IterationsUsed;
-                if (showOutput)
-                {
-                    foreach (double b in best)
-                    {
-                        Console.Write(b);
-                        Console.Write(" ");
-                    }
-                    Console.WriteLine();
-                }
+                DEMinimizer min = new DEMinimizer(minFunc, 4, -5, 5);
+                DEMinimizerResult result = min.Run(hp, 0.1, 1000);
+                Console.WriteLine(result);
             }
 
             sw.Stop();

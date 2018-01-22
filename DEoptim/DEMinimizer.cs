@@ -4,11 +4,18 @@ namespace DEoptim
 {
     public class DEMinimizer
     {
+        public double[] MaxRange => maxRange;
+        public double[] MinRange => minRange;
+        public Func<double[], double> MinFunc => minFunc;
+
         protected int dim;
         protected Func<double[], double> minFunc;
         protected double[] minRange, maxRange;
         protected Random rng = new Random();
         protected DEVariant DE = DEVariant.Default();
+        protected double[] cost;
+        protected double[][] population;
+        protected int minCostIdx = -1;
 
         public DEMinimizer(Func<double[], double> minFunc, int dim, double minRange, double maxRange)
         {
@@ -23,12 +30,13 @@ namespace DEoptim
             }
         }
 
-        public DEMinimizerResult Run(DEHyperParameter param, double valueToReach, int numGenerations = int.MaxValue)
+        public DEMinimizerResult Run(DEHyperParameter param, double valueToReach, int numGenerations = int.MaxValue, IEvolutionWorker worker = null)
         {
-            double[][] population;
-            double[] cost;
-            int minCostIdx = -1;
-            
+            if (worker == null)
+            {
+                worker = EvolutionWorkerFactory.createSingleThreaded();
+            }
+
             // Initialize populations
             population = new double[param.Individuals][];
             cost = new double[param.Individuals];
@@ -43,46 +51,16 @@ namespace DEoptim
             int g = 0;
             for (g = 0; g < numGenerations; g++)
             {
-                for (int xIdx = 0; xIdx < param.Individuals; xIdx++)
+                int[] slices = worker.SliceStrategy(param.Individuals);
+                for (int i = 0; i < slices.Length; i += 2)
                 {
-                    int aIdx = RandomUtils.PickRandomAgent(param.Individuals, new int[] { xIdx }, rng);
-                    int bIdx = RandomUtils.PickRandomAgent(param.Individuals, new int[] { xIdx, aIdx }, rng);
-                    int cIdx = RandomUtils.PickRandomAgent(param.Individuals, new int[] { xIdx, aIdx, bIdx }, rng);
-
-                    double[] x = population[xIdx];
-                    double[] a = population[aIdx];
-                    double[] b = population[bIdx];
-                    double[] c = population[cIdx];
-
-                    int j = rng.Next(dim);
-                    double[] y = new double[dim];
-
-                    for (int k = 0; k < dim; k++)
-                    {
-                        if (rng.NextDouble() < param.CR || k == dim - 1)
-                        {
-                            //y[j] = EnsureBounds(c[j] + param.F * (a[j] - b[j]), j, rng);
-                            y[j] = DE.MutateVectorElement(param, a[j], b[j], c[j]);
-                        }
-                        else
-                        {
-                            y[j] = x[j];
-                        }
-                        j = (j + 1) % dim;
-                    }
-
-                    // Test our candidate
-                    double yCost = minFunc(y);
-                    if (cost[xIdx] > yCost)
-                    {
-                        population[xIdx] = y;
-                        cost[xIdx] = yCost;
-                        if (minCostIdx == -1 || cost[xIdx] <= cost[minCostIdx])
-                        {
-                            minCostIdx = xIdx;
-                        }
-                    }
+                    int start = slices[i];
+                    int end = slices[i + 1];
+                    worker.Submit(new DEMinimizerWork(this, DE, population, cost, dim, rng, param, start, end));
                 }
+
+                worker.Start();
+                worker.Join();
 
                 if (valueToReach >= cost[minCostIdx])
                 {
@@ -93,20 +71,17 @@ namespace DEoptim
             return new DEMinimizerResult(cost[minCostIdx], population[minCostIdx], g);
         }
 
-        /// <summary>
-        /// Checks if v is within the specified limits. If it violates the interval
-        /// boundaries, a newly randomized value is returned. Otherwise v is returned.
-        /// </summary>
-        /// <param name="v"></param>
-        /// <param name="rng"></param>
-        /// <param name="idx"></param>
-        /// <returns>v if within bounds, a randomized value otherwise.</returns>
-        private double EnsureBounds(double v, int idx, Random rng)
+        private readonly object lockUpdateBestCandidate = new object();
+
+        public void UpdateBestCandidate(int idx)
         {
-            if (v < minRange[idx] || v > maxRange[idx])
-                return RandomUtils.RandomizeDouble(minRange[idx], maxRange[idx], rng);
-            else
-                return v;
+            lock(lockUpdateBestCandidate)
+            {
+                if (minCostIdx < 0 || cost[idx] < cost[minCostIdx])
+                {
+                    minCostIdx = idx;
+                }
+            }
         }
 
     } // end class

@@ -42,4 +42,25 @@ public class MinimizerTest
         }
         Assert.IsTrue(minGens * 5 <= 406);
     }
+
+    [TestMethod]
+    public void TestMinimizeRosenbrockSaddle()
+    {
+        int minGens = int.MaxValue;
+        for (int n = 0; n < 10; n++)
+        {
+            DEMinimizer min = new DEMinimizer(RosenbrockSaddle, 2, -2.048, 2.048);
+            DEHyperParameter hp = new DEHyperParameter();
+
+            // Use hyperparameter from Storn and Price paper
+            hp.Individuals = 5;
+            hp.F = 0.9f;
+            hp.CR = 0.1f;
+
+            DEMinimizerResult result = min.Run(hp, 1E-6, 1000);
+            Console.WriteLine(result);
+            minGens = Math.Min(minGens, result.Generations);
+        }
+        Assert.IsTrue(minGens * 5 <= 406);
+    }
 }
