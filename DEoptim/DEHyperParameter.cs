@@ -7,7 +7,7 @@ namespace DEoptim
     /// <summary>
     /// Parameter for the Differential Evolution Optimizer. 
     /// </summary>
-    public class DEOptimizerParameter
+    public class DEHyperParameter
     {
         private float crossoverProbability = 0.9f;
         private float f = 0.8f;

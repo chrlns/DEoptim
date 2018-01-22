@@ -24,7 +24,7 @@ namespace DEoptim
         protected double[][] population;
         protected double[] cost;
 
-        protected DEOptimizerParameter optParam;
+        protected DEHyperParameter optParam;
 
         protected int minCostIdx = 0;
         protected double[] lowerLimit, upperLimit;
@@ -41,7 +41,7 @@ namespace DEoptim
 
         public DEOptimizer(
             Func<double[], double[], double> function, int numParameters,
-            double lowerLimit, double upperLimit, DEOptimizerParameter optParam)
+            double lowerLimit, double upperLimit, DEHyperParameter optParam)
         {
             double[] upper = new double[numParameters];
             double[] lower = new double[numParameters];
@@ -55,13 +55,13 @@ namespace DEoptim
 
         public DEOptimizer(
             Func<double[], double[], double> function, int numParameters,
-            double[] lowerLimit, double[] upperLimit, DEOptimizerParameter optParam)
+            double[] lowerLimit, double[] upperLimit, DEHyperParameter optParam)
         {
             Init(function, numParameters, lowerLimit, upperLimit, optParam);
         }
 
         private void Init(Func<double[], double[], double> function, int numParameters,
-            double[] lowerLimit, double[] upperLimit, DEOptimizerParameter optParam)
+            double[] lowerLimit, double[] upperLimit, DEHyperParameter optParam)
         { 
             this.function = function;
             this.numParameters = numParameters;

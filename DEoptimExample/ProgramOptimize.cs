@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace DEoptimExample
 {
-    class Program
+    class ProgramOptimize
     {
         private static double MySinoidFunc(double[] coeff, double[] vars)
         {

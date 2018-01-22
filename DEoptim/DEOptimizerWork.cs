@@ -10,11 +10,11 @@ namespace DEoptim
         protected double[][] population;   // Our population of individuals (agents)
         protected double[] populationCost; // The 1-fitness (cost) of every individual
         protected Random rng;
-        protected DEOptimizerParameter optParam;
+        protected DEHyperParameter optParam;
 
         protected DEOptimizer opt;
 
-        public DEOptimizerWork(DEOptimizer opt, double[][] population, double[] cost, int numParameters, Random rng, DEOptimizerParameter optParam)
+        public DEOptimizerWork(DEOptimizer opt, double[][] population, double[] cost, int numParameters, Random rng, DEHyperParameter optParam)
         {
             this.opt = opt;
             this.numParameters = numParameters;
