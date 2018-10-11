@@ -2,6 +2,18 @@
 
 #include <iostream>
 
+#ifndef WIN32
+#define __stdcall
+#endif
+
+void __stdcall pfn_notify(const char* errinfo,
+	const void* private_info,
+	size_t cb, void* user_data)
+{
+	fprintf(stderr, "OpenCL Error (via pfn_notify): %s\n", errinfo);
+	flush(cout);
+}
+
 vector<shared_ptr<oclPlatform>> oclPlatform::queryPlatforms() {
 	cl_platform_id platform_ids[8];
 	cl_uint numPlatforms;
@@ -38,6 +50,28 @@ shared_ptr<oclPlatform> oclPlatform::queryDefaultPlatform() {
 
 oclPlatform::oclPlatform(cl_platform_id id) : id(id) {
 
+}
+
+cl_context oclPlatform::createContext(cl_device_type type, cl_int* errNum) {
+	cl_context_properties properties[] = {
+		CL_CONTEXT_PLATFORM,
+		(cl_context_properties)id,
+		0
+	};
+
+	cl_context context = clCreateContextFromType(properties, 
+        type,
+		&pfn_notify,
+		NULL,
+		errNum);
+
+    this->current_context = context;
+
+	return context;
+}
+
+cl_context oclPlatform::createDefaultGPUContext(cl_int* errNum) {
+    return createContext(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_DEFAULT, errNum);
 }
 
 void oclPlatform::printDeviceInfo(cl_device_id id) {

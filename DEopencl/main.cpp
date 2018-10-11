@@ -8,34 +8,7 @@
 
 #include <oclPlatform.h>
 
-#ifndef WIN32
-#define __stdcall
-#endif
-
 using namespace std;
-
-void __stdcall pfn_notify(const char* errinfo,
-	const void* private_info,
-	size_t cb, void* user_data)
-{
-	fprintf(stderr, "OpenCL Error (via pfn_notify): %s\n", errinfo);
-	flush(cout);
-}
-
-cl_context createContext(cl_platform_id platform, cl_int* errNum) {
-	cl_context_properties properties[] = {
-		CL_CONTEXT_PLATFORM,
-		(cl_context_properties)platform,
-		0
-	};
-
-	cl_context context = clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_DEFAULT,
-		&pfn_notify,
-		NULL,
-		errNum);
-
-	return context;
-}
 
 void createRandomBuffer(float min, float max, float buf[], int len) {
 	std::random_device rd;
@@ -58,7 +31,7 @@ int main(int argc, char* argv[]) {
 	defaultPlatform->printPlatformInfo();
 
 	cl_int errNum;
-	//cl_context context = createContext(platforms[0], &errNum);
+	cl_context context = defaultPlatform->createDefaultGPUContext(&errNum);
 	if (errNum != CL_SUCCESS) {
 		switch (errNum) {
 		case CL_INVALID_PLATFORM:
