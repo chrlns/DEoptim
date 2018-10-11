@@ -8,4 +8,4 @@ endif()
 
 include_directories(".")
 
-add_executable(decl main.cpp oclPlatform.cpp oclDevice.cpp)
+add_executable(decl main.cpp oclPlatform.cpp oclDevice.cpp cl_utils.cpp)

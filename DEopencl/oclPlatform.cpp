@@ -74,6 +74,10 @@ cl_context oclPlatform::createDefaultGPUContext(cl_int* errNum) {
     return createContext(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_DEFAULT, errNum);
 }
 
+cl_platform_id oclPlatform::getId() {
+    return id;
+}
+
 void oclPlatform::printDeviceInfo(cl_device_id id) {
 	char* buf = new char[512];
 	cl_uint buf_uint;

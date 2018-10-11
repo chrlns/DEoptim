@@ -13,17 +13,17 @@
    The state must be seeded so that it is not everywhere zero."
    Original C version written 2016 by David Blackman and Sebastiano Vigna (vigna@acm.org), Public Domain
    */
-static inline uint32 rotl(const uint32 x, int k) {
+static inline uint rotl(const uint x, int k) {
     return (x << k) | (x >> (32 - k));
 }
 
 // TODO Where to put that? ?
-static uint32_t s[2];
+static uint s[2];
 
-uint32_t xoroshiro64star_next(void) {
-	const uint32_t s0 = s[0];
-	uint32_t s1 = s[1];
-	const uint32_t result_star = s0 * 0x9E3779BB;
+uint xoroshiro64star_next(void) {
+	const uint s0 = s[0];
+	uint s1 = s[1];
+	const uint result_star = s0 * 0x9E3779BB;
 
 	s1 ^= s0;
 	s[0] = rotl(s0, 26) ^ s1 ^ (s1 << 9); // a, b
