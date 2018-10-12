@@ -75,17 +75,9 @@ int main(int argc, char* argv[]) {
 	}
 	shared_ptr<oclDevice> device = devices[0];
 
-	int N = 8096;
+	int NP = 8096; // Number of individuals // TODO cli param
+	int N = 4; // 4 floats per individual
 
-	// We need buffers, more buffers...
-	// a read-only 1D-buffer containing the sample data float2[NUM_SAMPLES] buf_samples_1d
-	// a read-write 2D-buffer containing temporary evaluation data float[NUM_INDIVIDUALS x NUM_SAMPLES] buf_sample_error_2d
-	// a read-write 1D-buffer containing the individuals float4[NUM_INDIVIDUALS] buf_pop_1d
-	// a read-write 1D-buffer containing the individuals' errors float[NUM_INDIVIDUALS] buf_pop_error_1d
-
-	// We need kernels:
-	// pop_init.cl (buf_rw_population): creates randomized individuals
-	// pop_eval.cl (buf_ro_samples, buf_rw_population, buf_rw_population_error, int pop_idx)
 
 	// Create command queue
 	cl_command_queue queue = clCreateCommandQueue(context, device->getId(), 0, &errNum);

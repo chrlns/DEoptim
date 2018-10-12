@@ -13,14 +13,12 @@
    The state must be seeded so that it is not everywhere zero."
    Original C version written 2016 by David Blackman and Sebastiano Vigna (vigna@acm.org), Public Domain
    */
-static inline uint rotl(const uint x, int k) {
+
+inline uint rotl(const uint x, int k) {
     return (x << k) | (x >> (32 - k));
 }
 
-// TODO Where to put that? ?
-static uint s[2];
-
-uint xoroshiro64star_next(void) {
+uint xoroshiro64star_next(__global uint s[2]) {
 	const uint s0 = s[0];
 	uint s1 = s[1];
 	const uint result_star = s0 * 0x9E3779BB;
@@ -32,7 +30,7 @@ uint xoroshiro64star_next(void) {
 	return result_star;
 }
 
-__kernel void pop_init (__global float2* buf_samples_1d) {
+__kernel void population_init (__global float2* buf_samples_1d, __global uint seed[2]) {
 
 }
 
