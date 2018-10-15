@@ -30,7 +30,15 @@ uint xoroshiro64star_next(__global uint s[2]) {
 	return result_star;
 }
 
-__kernel void population_init (__global float2* buf_samples_1d, __global uint seed[2]) {
+/**
+ *  Initializes the population buffer with random values.
+ *
+ *  @param population Buffer holding the complete population.
+ *  @param each Number of float that represent one individual.
+ *  @param seed for the PRNG.
+ */
+__kernel 
+void population_init (__global float* population, uint each, __global uint seed[2]) {
 
 }
 
