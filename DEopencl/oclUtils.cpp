@@ -10,7 +10,8 @@ using namespace std;
  * Loads a text file containing OpenCL kernels and compiles the program
  * using clCreateProgramWithSource.
  */
-cl_program clCreateProgramFromFile(cl_context context, const char* file, int maxLineLength, int maxFileLength, cl_int* err)
+cl_program clCreateProgramFromFile(cl_context context, const char* file, int maxLineLength, 
+                                   int maxFileLength, cl_int* err)
 {
 	cl_uint n;
 	ifstream in(file);

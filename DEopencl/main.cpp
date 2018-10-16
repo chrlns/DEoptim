@@ -116,5 +116,14 @@ int main(int argc, char* argv[]) {
 	}
 	cout << "Successfully built OpenCL program." << endl;
 
+	cl_int err;
+	cl_kernel kern_population_init = clCreateKernel(program, "population_init", &err);
+	if (err != CL_SUCCESS) {
+		switch (err) {
+		default:
+			cerr << "Error clCreateKernel() = " << err << endl;
+		}
+	}
+
 	return 0;
 }
