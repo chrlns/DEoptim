@@ -31,7 +31,7 @@ uint xoroshiro64star_next(__global uint s[2]) {
 }
 
 float rng_next_float(__global uint* seed) {
-    return xoroshiro64star_next(seed) / (float)(1 << 32);
+    return xoroshiro64star_next(seed) / (float)(1 << 31);
 }
 
 /**
@@ -50,7 +50,7 @@ void population_init (__global float* population, uint attr,
     seed = seed + 2 * id;
 
     for (uint a = 0; a < attr; a++) {
-        population[id + a] = rng_next_float(seed);
+        population[attr * id + a] = rng_next_float(seed);
     }
 }
 

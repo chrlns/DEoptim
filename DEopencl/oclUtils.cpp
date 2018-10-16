@@ -50,13 +50,22 @@ void printCLStatus(cl_int errNum, string msg)
 	if (errNum == CL_SUCCESS)
 		return;
 
-	cout << "OpenCL result = ";
+	cout << "OpenCL Error " << msg << " result = ";
 	switch (errNum) {
-	case CL_SUCCESS:
-		cout << "CL_SUCCESS";
-		return;
 	case CL_OUT_OF_HOST_MEMORY:
 		cout << "CL_OUT_OF_HOST_MEMORY";
+		break;
+	case CL_INVALID_ARG_INDEX:
+		cout << "CL_INVALID_ARG_INDEX";
+		break;
+	case CL_INVALID_ARG_VALUE:
+		cout << "CL_INVALID_ARG_VALUE";
+		break;
+	case CL_INVALID_KERNEL:
+		cout << "CL_INVALID_KERNEL";
+		break;
+	case CL_INVALID_MEM_OBJECT:
+		cout << "CL_INVALID_MEM_OBJECT";
 		break;
 	case CL_INVALID_WORK_GROUP_SIZE:
 		cout << "CL_INVALID_WORK_GROUP_SIZE";

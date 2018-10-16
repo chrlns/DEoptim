@@ -14,12 +14,12 @@
 
 using namespace std;
 
-void createRandomBuffer(float min, float max, float buf[], int len) {
+void createRandomBuffer(cl_float min, cl_float max, cl_float buf[], cl_uint len) {
 	std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_real_distribution<float> dist(min, max);
 
-	for (int n = 0; n < len; n++) {
+	for (cl_uint n = 0; n < len; n++) {
 		buf[n] = dist(rng);
 	}
 }
@@ -75,8 +75,8 @@ int main(int argc, char* argv[]) {
 	}
 	shared_ptr<oclDevice> device = devices[0];
 
-	int NP = 8096; // Number of individuals // TODO cli param
-	int N = 4; // 4 floats per individual
+	cl_uint NP = 8096; // Number of individuals // TODO cli param
+	cl_uint N = 4; // 4 floats per individual
 
 
 	// Create command queue
@@ -124,6 +124,58 @@ int main(int argc, char* argv[]) {
 			cerr << "Error clCreateKernel() = " << err << endl;
 		}
 	}
+
+	// Create population buffer
+	cl_mem buf_population = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * NP * N, nullptr, &err);
+	printCLStatus(err, "clCreateBuffer population");
+
+	// Create buffers for attribute limits
+	cl_float* attr_min_limit = new cl_float[N];
+	cl_float* attr_max_limit = new cl_float[N];
+	cl_mem buf_attr_min_limit = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_float) * N, (void*)attr_min_limit, &err);
+	printCLStatus(err, "clCreateBuffer attr_min_limit");
+	cl_mem buf_attr_max_limit = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_float) * N, (void*)attr_max_limit, &err);
+	printCLStatus(err, "clCreateBuffer attr_max_limit");
+
+	// Create buffers for seed
+	cl_float* seed = new cl_float[2 * NP];
+	createRandomBuffer(-10, 10, seed, 2 * NP);
+	cl_mem buf_seed = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_float) * N * 2, (void*)seed, &err);
+	printCLStatus(err, "clCreateBuffer seed");
+
+	// Set the kernel arguments
+	err = clSetKernelArg(kern_population_init, 0, sizeof(cl_mem), &buf_population);
+	printCLStatus(err, "clSetKernelArg population_init 0");
+	err = clSetKernelArg(kern_population_init, 1, sizeof(cl_uint), &N);
+	printCLStatus(err, "clSetKernelArg population_init 1");
+	err = clSetKernelArg(kern_population_init, 2, sizeof(cl_mem), &buf_attr_min_limit);
+	printCLStatus(err, "clSetKernelArg population_init 2");
+	err = clSetKernelArg(kern_population_init, 3, sizeof(cl_mem), &buf_attr_max_limit);
+	printCLStatus(err, "clSetKernelArg population_init 3");
+	err = clSetKernelArg(kern_population_init, 4, sizeof(cl_mem), &buf_seed);
+	printCLStatus(err, "clSetKernelArg population_init 4");
+
+	cl_event wait;
+	cl_uint workDim = 1;
+	size_t globalWorkSize = NP;
+	size_t localWorkSize = 256; // FIXME Determine
+
+	err = clEnqueueNDRangeKernel(queue, kern_population_init, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+	printCLStatus(err, "clEnqueueNDRangeKernel population_init");
+
+	cout << "Kernel running...";
+	err = clFinish(queue);
+	printCLStatus(err, "clFinish");
+	cout << "OK" << endl;
+
+	cl_float* population = new cl_float[NP * N];
+	err = clEnqueueReadBuffer(queue, buf_population, true, 0, sizeof(cl_float) * NP * N, population, 0, nullptr, nullptr);
+	printCLStatus(err, "clEnqueueReadBuffer");
+
+	for (int n = 0; n < 15; n++) {
+		cout << population[n] << " ";
+	}
+	cout << endl;
 
 	return 0;
 }
