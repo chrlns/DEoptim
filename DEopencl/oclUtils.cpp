@@ -1,4 +1,4 @@
-#include "cl_utils.h"
+#include <oclUtils.h>
 
 #include <fstream>
 #include <iostream>

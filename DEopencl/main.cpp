@@ -10,7 +10,7 @@
 
 #include <oclDevice.h>
 #include <oclPlatform.h>
-#include <cl_utils.h>
+#include <oclUtils.h>
 
 using namespace std;
 

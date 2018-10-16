@@ -38,7 +38,9 @@ uint xoroshiro64star_next(__global uint s[2]) {
  *  @param seed for the PRNG.
  */
 __kernel 
-void population_init (__global float* population, uint each, __global uint seed[2]) {
-
+void population_init (__global float* population, uint each, __global uint* seed) {
+    __private size_t id = get_global_linear_id();
+    seed = seed + 2 * id;
+    
 }
 
