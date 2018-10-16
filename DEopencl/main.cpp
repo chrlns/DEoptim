@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
 		}
 		return -1;
 	}
-
+	cout << "Successfully built OpenCL program." << endl;
 
 	return 0;
 }

@@ -30,6 +30,10 @@ uint xoroshiro64star_next(__global uint s[2]) {
 	return result_star;
 }
 
+float rng_next_float(__global uint* seed) {
+    return xoroshiro64star_next(seed) / (float)(1 << 32);
+}
+
 /**
  *  Initializes the population buffer with random values.
  *
@@ -38,9 +42,15 @@ uint xoroshiro64star_next(__global uint s[2]) {
  *  @param seed for the PRNG.
  */
 __kernel 
-void population_init (__global float* population, uint each, __global uint* seed) {
+void population_init (__global float* population, uint attr, 
+                      __global float* attr_min_limit, __global float* attr_max_limit, 
+                      __global uint* seed) 
+{
     __private size_t id = get_global_linear_id();
     seed = seed + 2 * id;
-    
+
+    for (uint a = 0; a < attr; a++) {
+        population[id + a] = rng_next_float(seed);
+    }
 }
 
