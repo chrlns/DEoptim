@@ -31,7 +31,7 @@ uint xoroshiro64star_next(__global uint s[2]) {
 }
 
 float rng_next_float(__global uint* seed) {
-    return xoroshiro64star_next(seed) / (float)(1 << 31);
+    return xoroshiro64star_next(seed) / 4294967295.0f; // 2^32 as float
 }
 
 /**
