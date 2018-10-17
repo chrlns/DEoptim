@@ -30,8 +30,18 @@ uint xoroshiro64star_next(__global uint s[2]) {
 	return result_star;
 }
 
+uint rng_next_int(__global uint* seed, uint max) {
+    return xoroshiro64star_next(seed) % max;
+}
+
 float rng_next_float(__global uint* seed) {
     return xoroshiro64star_next(seed) / 4294967295.0f; // 2^32 as float
+}
+
+float rng_next_float_range(__global uint* seed, float min, float max) {
+    uint r = xoroshiro64star_next(seed);
+    float d =  4294967295.0f / (max - min);
+    return (r / d) - (max - min) / 2.0f;
 }
 
 /**
@@ -50,7 +60,32 @@ void population_init (__global float* population, uint attr,
     seed = seed + 2 * id;
 
     for (uint a = 0; a < attr; a++) {
-        population[attr * id + a] = rng_next_float(seed);
+        float rnd = rng_next_float_range(seed, attr_min_limit[a], attr_max_limit[a]);
+        population[attr * id + a] = rnd;
     }
 }
 
+__kernel
+void population_mutate(uint NP, __global float* population, __global float* population_new, 
+                       uint attr, __global float* attr_min_limit, __global float* attr_max_limit, 
+                       __global uint* seed) 
+{
+    __private size_t id = get_global_linear_id();
+    seed = seed + 2 * id;
+
+    uint r1 = rng_next_int(seed, NP);
+    uint r2 = rng_next_int(seed, NP);
+    uint r3 = rng_next_int(seed, NP);
+
+
+}
+
+__kernel
+void population_cross() {
+
+}
+
+__kernel
+void population_select() {
+
+}

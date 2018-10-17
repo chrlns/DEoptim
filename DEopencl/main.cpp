@@ -132,6 +132,10 @@ int main(int argc, char* argv[]) {
 	// Create buffers for attribute limits
 	cl_float* attr_min_limit = new cl_float[N];
 	cl_float* attr_max_limit = new cl_float[N];
+	for (int n = 0; n < N; n++) {
+		attr_max_limit[n] = 10.0f;
+		attr_min_limit[n] = -10.0f;
+	}
 	cl_mem buf_attr_min_limit = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_float) * N, (void*)attr_min_limit, &err);
 	printCLStatus(err, "clCreateBuffer attr_min_limit");
 	cl_mem buf_attr_max_limit = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_float) * N, (void*)attr_max_limit, &err);
