@@ -59,33 +59,73 @@ void population_init (__global float* population, uint attr,
     __private size_t id = get_global_linear_id();
     seed = seed + 2 * id;
 
+    id = id * attr;
+
     for (uint a = 0; a < attr; a++) {
         float rnd = rng_next_float_range(seed, attr_min_limit[a], attr_max_limit[a]);
-        population[attr * id + a] = rnd;
+        population[id + a] = rnd;
     }
 }
 
 __kernel
-void population_mutate(uint NP, __global float* population, __global float* population_new, 
+void population_mutate(uint NP, float F, __global float* pop, __global float* pop_new, 
                        uint attr, __global float* attr_min_limit, __global float* attr_max_limit, 
                        __global uint* seed) 
 {
     __private size_t id = get_global_linear_id();
     seed = seed + 2 * id;
 
-    uint r1 = rng_next_int(seed, NP);
-    uint r2 = rng_next_int(seed, NP);
-    uint r3 = rng_next_int(seed, NP);
+    id = id * attr;
 
+    uint r1 = rng_next_int(seed, NP) * attr;
+    uint r2 = rng_next_int(seed, NP) * attr;
+    uint r3 = rng_next_int(seed, NP) * attr;
 
+    for (uint a = 0; a < attr; a++) {
+        // DE/rand/1/bin
+        pop_new[id + a] = pop[r1 + a] + F * (pop[r2 + a] - pop[r3 + a]);
+    }
 }
 
 __kernel
-void population_cross() {
+void population_cross(float CR, __global float* pop, __global float* pop_new, 
+                      uint attr, __global uint* seed) 
+{
+    __private size_t id = get_global_linear_id();
+    seed = seed + 2 * id;
 
+    id = id * attr;
+
+    for (uint a = 0; a < attr; a++) {
+        float r = rng_next_float(seed);
+        if (r > CR) {
+            // Choose the original attribute
+            pop_new[id + a] = pop[id + a];
+        } // else use the new mutated one
+    }
+}
+
+inline float bench_f1(__global float x[3]) {
+    float sum = 0.0f;
+    for (int n = 0; n < 3; n++) {
+        sum = sum + (x[n] * x[n]);
+    }
+    return sum;
+}
+
+float fitness(__global float x[3]) {
+    return bench_f1(x);
 }
 
 __kernel
-void population_select() {
+void population_select(__global float* pop, __global float* pop_new, uint attr) {
+    __private size_t id = get_global_linear_id() * attr;
 
+    float fitness_old = fitness(pop + id);
+    float fitness_new = fitness(pop_new + id);
+    if (fitness_new >= fitness_old) {
+        for (int a = 0; a < attr; a++) {
+            pop_new[id + a] = pop[id + a]; // TODO memcpy?
+        }
+    }
 }

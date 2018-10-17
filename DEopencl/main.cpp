@@ -118,16 +118,19 @@ int main(int argc, char* argv[]) {
 
 	cl_int err;
 	cl_kernel kern_population_init = clCreateKernel(program, "population_init", &err);
-	if (err != CL_SUCCESS) {
-		switch (err) {
-		default:
-			cerr << "Error clCreateKernel() = " << err << endl;
-		}
-	}
+	printCLStatus(err, "clCreateKernel population_init");
+	cl_kernel kern_population_mutate = clCreateKernel(program, "population_mutate", &err);
+	printCLStatus(err, "clCreateKernel population_mutate");
+	cl_kernel kern_population_cross = clCreateKernel(program, "population_cross", &err);
+	printCLStatus(err, "clCreateKernel population_cross");
+	cl_kernel kern_population_select = clCreateKernel(program, "population_select", &err);
+	printCLStatus(err, "clCreateKernel population_select");
 
 	// Create population buffer
-	cl_mem buf_population = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * NP * N, nullptr, &err);
-	printCLStatus(err, "clCreateBuffer population");
+	cl_mem buf_population_0 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * NP * N, nullptr, &err);
+	printCLStatus(err, "clCreateBuffer population_0");
+	cl_mem buf_population_1 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * NP * N, nullptr, &err);
+	printCLStatus(err, "clCreateBuffer population_1");
 
 	// Create buffers for attribute limits
 	cl_float* attr_min_limit = new cl_float[N];
@@ -148,7 +151,7 @@ int main(int argc, char* argv[]) {
 	printCLStatus(err, "clCreateBuffer seed");
 
 	// Set the kernel arguments
-	err = clSetKernelArg(kern_population_init, 0, sizeof(cl_mem), &buf_population);
+	err = clSetKernelArg(kern_population_init, 0, sizeof(cl_mem), &buf_population_0);
 	printCLStatus(err, "clSetKernelArg population_init 0");
 	err = clSetKernelArg(kern_population_init, 1, sizeof(cl_uint), &N);
 	printCLStatus(err, "clSetKernelArg population_init 1");
@@ -173,7 +176,7 @@ int main(int argc, char* argv[]) {
 	cout << "OK" << endl;
 
 	cl_float* population = new cl_float[NP * N];
-	err = clEnqueueReadBuffer(queue, buf_population, true, 0, sizeof(cl_float) * NP * N, population, 0, nullptr, nullptr);
+	err = clEnqueueReadBuffer(queue, buf_population_0, true, 0, sizeof(cl_float) * NP * N, population, 0, nullptr, nullptr);
 	printCLStatus(err, "clEnqueueReadBuffer");
 
 	for (int n = 0; n < 15; n++) {
