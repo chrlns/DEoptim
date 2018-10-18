@@ -59,6 +59,8 @@ void population_init (__global float* population, uint attr,
     __private size_t id = get_global_linear_id();
     seed = seed + 2 * id;
 
+    printf("Seed #%u: %u %u\n", id, seed[0], seed[1]);
+
     id = id * attr;
 
     for (uint a = 0; a < attr; a++) {
@@ -69,8 +71,7 @@ void population_init (__global float* population, uint attr,
 
 __kernel
 void population_mutate(uint NP, float F, __global float* pop, __global float* pop_new, 
-                       uint attr, __global float* attr_min_limit, __global float* attr_max_limit, 
-                       __global uint* seed) 
+                       uint attr, __global uint* seed) 
 {
     __private size_t id = get_global_linear_id();
     seed = seed + 2 * id;
