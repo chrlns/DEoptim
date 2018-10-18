@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 	shared_ptr<oclDevice> device = devices[0];
 
 	cl_uint NP = 1024; // Number of individuals // TODO cli param
-	cl_uint N = 3; // 3 floats per individual
+	cl_uint N = 2; // N floats per individual
 	cl_uint Gmax = 100; // Number of generations
 
 	// Create command queue
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	const char* options = "-cl-std=CL1.2 -O3";
+	const char* options = "-cl-std=CL1.2 -O3 -DBENCHMARK_F2";
 	cl_device_id device_list[1] = {device->getId()};
 	errNum = clBuildProgram(program, 1, device_list, options, nullptr, nullptr);
 	if (errNum != CL_SUCCESS) {
@@ -137,8 +137,12 @@ int main(int argc, char* argv[]) {
 	cl_float* attr_min_limit = new cl_float[N];
 	cl_float* attr_max_limit = new cl_float[N];
 	for (int n = 0; n < N; n++) {
+		#ifdef BENCHMARK_F1
 		attr_max_limit[n] = 5.12;
 		attr_min_limit[n] = -5.12f;
+		#endif
+		attr_max_limit[n] = 2.048;
+		attr_min_limit[n] = -2.048f;
 	}
 	cl_mem buf_attr_min_limit = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_float) * N, (void*)attr_min_limit, &err);
 	printCLStatus(err, "clCreateBuffer attr_min_limit");
@@ -246,6 +250,8 @@ int main(int argc, char* argv[]) {
 		// Read results
 		err = clEnqueueReadBuffer(queue, buf_costs, true, 0, sizeof(cl_float) * NP, costs, 0, nullptr, nullptr);
 		printCLStatus(err, "clEnqueueReadBuffer");
+		err = clFinish(queue);
+		printCLStatus(err, "clFinish");
 
 		cl_uint min = 0;
 		for (cl_uint n = 1; n < NP; n++) {
@@ -258,11 +264,6 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 	}
-
-	cout << "Kernel running...";
-	err = clFinish(queue);
-	printCLStatus(err, "clFinish");
-	cout << "OK" << endl;
 
 	return 0;
 }

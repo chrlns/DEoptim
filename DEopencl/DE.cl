@@ -19,15 +19,15 @@ inline uint rotl(const uint x, int k) {
 }
 
 uint xoroshiro64star_next(__global uint s[2]) {
-	const uint s0 = s[0];
-	uint s1 = s[1];
-	const uint result_star = s0 * 0x9E3779BB;
+    const uint s0 = s[0];
+    uint s1 = s[1];
+    const uint result_star = s0 * 0x9E3779BB;
 
-	s1 ^= s0;
-	s[0] = rotl(s0, 26) ^ s1 ^ (s1 << 9); // a, b
-	s[1] = rotl(s1, 13); // c
+    s1 ^= s0;
+    s[0] = rotl(s0, 26) ^ s1 ^ (s1 << 9); // a, b
+    s[1] = rotl(s1, 13); // c
 
-	return result_star;
+    return result_star;
 }
 
 uint rng_next_int(__global uint* seed, uint max) {
@@ -112,8 +112,17 @@ inline float bench_f1(__global float x[3]) {
     return sum;
 }
 
-float fitness(__global float x[3]) {
+inline float bench_f2(__global float x[2]) {
+    return 100 * pow(pow(x[0], 2) - x[1], 2) + pow(1 - x[0], 2);
+}
+
+float fitness(__global float* x) {
+#ifdef BENCHMARK_F1
     return bench_f1(x);
+#endif
+#ifdef BENCHMARK_F2
+    return bench_f2(x);
+#endif
 }
 
 __kernel
