@@ -59,8 +59,6 @@ void population_init (__global float* population, uint attr,
     __private size_t id = get_global_linear_id();
     seed = seed + 2 * id;
 
-    printf("Seed #%u: %u %u\n", id, seed[0], seed[1]);
-
     id = id * attr;
 
     for (uint a = 0; a < attr; a++) {
@@ -119,7 +117,7 @@ float fitness(__global float x[3]) {
 }
 
 __kernel
-void population_select(__global float* pop, __global float* pop_new, uint attr) {
+void population_select(__global float* pop, __global float* pop_new, uint attr, __global float* costs) {
     __private size_t id = get_global_linear_id() * attr;
 
     float fitness_old = fitness(pop + id);
@@ -128,5 +126,8 @@ void population_select(__global float* pop, __global float* pop_new, uint attr) 
         for (int a = 0; a < attr; a++) {
             pop_new[id + a] = pop[id + a]; // TODO memcpy?
         }
+        costs[get_global_linear_id()] = fitness_old;
+    } else {
+        costs[get_global_linear_id()] = fitness_new;
     }
 }

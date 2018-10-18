@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
 	cl_uint NP = 1024; // Number of individuals // TODO cli param
 	cl_uint N = 3; // 3 floats per individual
-
+	cl_uint Gmax = 100; // Number of generations
 
 	// Create command queue
 	cl_command_queue queue = clCreateCommandQueue(context, device->getId(), 0, &errNum);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	const char* options = "-cl-std=CL1.2";
+	const char* options = "-cl-std=CL1.2 -O3";
 	cl_device_id device_list[1] = {device->getId()};
 	errNum = clBuildProgram(program, 1, device_list, options, nullptr, nullptr);
 	if (errNum != CL_SUCCESS) {
@@ -148,8 +148,11 @@ int main(int argc, char* argv[]) {
 	// Create buffers for seed
 	cl_uint* seed = new cl_uint[2 * NP];
 	createRandomBuffer(seed, 2 * NP);
-	cl_mem buf_seed = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_uint) * N * 2, (void*)seed, &err);
+	cl_mem buf_seed = clCreateBuffer(context, CL_MEM_USE_HOST_PTR, sizeof(cl_uint) * NP * 2, (void*)seed, &err);
 	printCLStatus(err, "clCreateBuffer seed");
+
+	cl_mem buf_costs = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * NP, NULL, &err);
+	printCLStatus(err, "clCreateBuffer costs");
 
 	// Set the kernel arguments
 	err = clSetKernelArg(kern_population_init, 0, sizeof(cl_mem), &buf_population_0);
@@ -171,36 +174,95 @@ int main(int argc, char* argv[]) {
 	err = clEnqueueNDRangeKernel(queue, kern_population_init, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
 	printCLStatus(err, "clEnqueueNDRangeKernel population_init");
 
+	// Default arguments of mutation kernel
 	cl_float F = 0.8f; // TODO paramterize
 	err = clSetKernelArg(kern_population_mutate, 0, sizeof(cl_uint), &NP);
 	printCLStatus(err, "clSetKernelArg population_mutate 0");
 	err = clSetKernelArg(kern_population_mutate, 1, sizeof(cl_float), &F);
 	printCLStatus(err, "clSetKernelArg population_mutate 1");
-	err = clSetKernelArg(kern_population_mutate, 2, sizeof(cl_mem), &buf_population_0);
-	printCLStatus(err, "clSetKernelArg population_mutate 2");
-	err = clSetKernelArg(kern_population_mutate, 3, sizeof(cl_mem), &buf_population_1);
-	printCLStatus(err, "clSetKernelArg population_mutate 3");
 	err = clSetKernelArg(kern_population_mutate, 4, sizeof(cl_uint), &N);
 	printCLStatus(err, "clSetKernelArg population_mutate 4");
 	err = clSetKernelArg(kern_population_mutate, 5, sizeof(cl_mem), &buf_seed);
 	printCLStatus(err, "clSetKernelArg population_mutate 5");
 
-	err = clEnqueueNDRangeKernel(queue, kern_population_mutate, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
-	printCLStatus(err, "clEnqueueNDRangeKernel population_mutate");
+	// Default arguments of crossover kernel
+	cl_float CR = 0.6f;
+	err = clSetKernelArg(kern_population_cross, 0, sizeof(cl_float), &CR);
+	printCLStatus(err, "clSetKernelArg population_cross 0");
+	err = clSetKernelArg(kern_population_cross, 3, sizeof(cl_uint), &N);
+	printCLStatus(err, "clSetKernelArg population_cross 3");
+	err = clSetKernelArg(kern_population_cross, 4, sizeof(cl_mem), &buf_seed);
+	printCLStatus(err, "clSetKernelArg population_cross 4");
+
+	// Default arguments of selection kernel
+	err = clSetKernelArg(kern_population_select, 2, sizeof(cl_uint), &N);
+	printCLStatus(err, "clSetKernelArg population_select 2");
+	err = clSetKernelArg(kern_population_select, 3, sizeof(cl_mem), &buf_costs);
+	printCLStatus(err, "clSetKernelArg population_select 3");
+
+	cl_float* costs = new cl_float[NP];
+
+	// DE Optimization Loop
+	for (cl_uint G = 1; G <= Gmax; G++) {
+		cout << "Gen. #" << G << " min = ";
+
+		cl_mem pop_old, pop_new;
+
+		if (G % 2 == 1) {
+			pop_old = buf_population_0;
+			pop_new = buf_population_1;
+		} else {
+			pop_old = buf_population_1;
+			pop_new = buf_population_0;
+		}
+
+		// Mutation
+		err = clSetKernelArg(kern_population_mutate, 2, sizeof(cl_mem), &pop_old);
+		printCLStatus(err, "clSetKernelArg population_mutate 2");
+		err = clSetKernelArg(kern_population_mutate, 3, sizeof(cl_mem), &pop_new);
+		printCLStatus(err, "clSetKernelArg population_mutate 3");
+
+		err = clEnqueueNDRangeKernel(queue, kern_population_mutate, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+		printCLStatus(err, "clEnqueueNDRangeKernel population_mutate");
+
+		// Crossover
+		err = clSetKernelArg(kern_population_cross, 1, sizeof(cl_mem), &pop_old);
+		printCLStatus(err, "clSetKernelArg population_cross 1");
+		err = clSetKernelArg(kern_population_cross, 2, sizeof(cl_mem), &pop_new);
+		printCLStatus(err, "clSetKernelArg population_cross 2");
+
+		err = clEnqueueNDRangeKernel(queue, kern_population_cross, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+		printCLStatus(err, "clEnqueueNDRangeKernel population_cross");
+
+		// Selection
+		err = clSetKernelArg(kern_population_select, 0, sizeof(cl_mem), &pop_old);
+		printCLStatus(err, "clSetKernelArg population_select 0");
+		err = clSetKernelArg(kern_population_select, 1, sizeof(cl_mem), &pop_new);
+		printCLStatus(err, "clSetKernelArg population_select 1");
+
+		err = clEnqueueNDRangeKernel(queue, kern_population_select, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+		printCLStatus(err, "clEnqueueNDRangeKernel population_select");
+
+		// Read results
+		err = clEnqueueReadBuffer(queue, buf_costs, true, 0, sizeof(cl_float) * NP, costs, 0, nullptr, nullptr);
+		printCLStatus(err, "clEnqueueReadBuffer");
+
+		cl_uint min = 0;
+		for (cl_uint n = 1; n < NP; n++) {
+			if (costs[n] < costs[min])
+				min = n;
+		}
+		cout << costs[min] << endl;
+		if (costs[min] <= 1e-6) {
+			cout << "VTR" << endl;
+			break;
+		}
+	}
 
 	cout << "Kernel running...";
 	err = clFinish(queue);
 	printCLStatus(err, "clFinish");
 	cout << "OK" << endl;
-
-	cl_float* population = new cl_float[NP * N];
-	err = clEnqueueReadBuffer(queue, buf_population_0, true, 0, sizeof(cl_float) * NP * N, population, 0, nullptr, nullptr);
-	printCLStatus(err, "clEnqueueReadBuffer");
-
-	for (int n = 0; n < 15; n++) {
-		cout << population[n] << " ";
-	}
-	cout << endl;
 
 	return 0;
 }

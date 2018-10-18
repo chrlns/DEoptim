@@ -58,6 +58,9 @@ void printCLStatus(cl_int errNum, string msg)
 	case CL_INVALID_ARG_INDEX:
 		cout << "CL_INVALID_ARG_INDEX";
 		break;
+	case CL_INVALID_ARG_SIZE:
+		cout << "CL_INVALID_ARG_SIZE";
+		break;
 	case CL_INVALID_ARG_VALUE:
 		cout << "CL_INVALID_ARG_VALUE";
 		break;
