@@ -118,6 +118,8 @@ int main(int argc, char* argv[]) {
 	cout << "Successfully built OpenCL program." << endl;
 
 	cl_int err;
+	cl_kernel kern_benchmark = clCreateKernel(program, "benchmark", &err);
+	printCLStatus(err, "clCreateKernel benchmark");
 	cl_kernel kern_population_init = clCreateKernel(program, "population_init", &err);
 	printCLStatus(err, "clCreateKernel population_init");
 	cl_kernel kern_population_mutate = clCreateKernel(program, "population_mutate", &err);
@@ -174,6 +176,16 @@ int main(int argc, char* argv[]) {
 	cl_uint workDim = 1;
 	size_t globalWorkSize = NP;
 	size_t localWorkSize = 256; // FIXME Determine
+
+	cout << "Running benchmark requiring " << (NP * 10) << " GFLOP" << endl; 
+	err = clSetKernelArg(kern_benchmark, 0, sizeof(cl_mem), &buf_seed);
+	printCLStatus(err, "clSetKernelArg benchmark 0");
+	err = clSetKernelArg(kern_benchmark, 1, sizeof(cl_mem), &buf_population_0);
+	printCLStatus(err, "clSetKernelArg benchmark 1");
+	err = clEnqueueNDRangeKernel(queue, kern_benchmark, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+	printCLStatus(err, "clEnqueueNDRangeKernel benchmark");
+	err = clFinish(queue);
+	printCLStatus(err, "clFinish");
 
 	err = clEnqueueNDRangeKernel(queue, kern_population_init, workDim, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
 	printCLStatus(err, "clEnqueueNDRangeKernel population_init");

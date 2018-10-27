@@ -140,3 +140,21 @@ void population_select(__global float* pop, __global float* pop_new, uint attr, 
         costs[get_global_linear_id()] = fitness_new;
     }
 }
+
+/** I hope this kernel requires roughly 10 GFlop */
+__kernel
+void benchmark(__global float* in, __global float* out) {
+    size_t id = get_global_linear_id();
+
+    float v = in[id];
+    float w = in[2 * id];
+
+    for (int n = 0; n < 1000000000; n++) {
+        float f0 = v * w;
+        float f1 = n * v;
+        float f2 = f1 / w;
+        float f3 = n * w;
+
+        out[n] = f0 * f1 * f2 * f3;
+    }
+}
